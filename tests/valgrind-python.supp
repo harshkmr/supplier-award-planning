@@ -1,0 +1,75 @@
+# Valgrind suppressions for CPython runtime leaks and false positives
+# These suppress known issues in CPython's memory management that are not bugs
+# in our extension code.
+
+# Python's string interning and module caching can leave memory "reachable"
+# but not properly cleaned up at shutdown.
+{
+   <Python string interning>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_PyMem_RawMalloc
+   ...
+   fun:PyUnicode_*
+   ...
+}
+
+{
+   <Python module caching>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:PyInit_*
+   ...
+}
+
+{
+   <Python codec registration>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_PyMem_RawMalloc
+   ...
+   fun:PyCodec_Register
+   ...
+}
+
+{
+   <Python importlib>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_frozen_importlib*
+   ...
+}
+
+{
+   <Python site module>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:sitecustomize*
+   ...
+}
+
+# Suppress errors in libc and system libraries
+{
+   <libc startup>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:_dl_*
+   ...
+}
+
+{
+   <libc ctype>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   fun:__ctype_init
+   ...
+}
