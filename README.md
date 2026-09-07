@@ -62,6 +62,25 @@ Output (JSON):
 python -m supplier_award plan data/sample_config.yaml --golden data/golden/expected_award_plan.json
 ```
 
+## Interactive Demos
+
+### 1. Terminal Demo
+Run the step-by-step guided terminal walkthrough:
+```bash
+python demo.py
+```
+
+### 2. Web Dashboard Demo
+Open the interactive visual dashboard in any browser:
+```bash
+# Windows
+Start-Process demo.html
+
+# Linux / macOS
+open demo.html # or xdg-open demo.html
+```
+The web dashboard features live FX fetching, ISO 20ft/40ft container payload visualizer, multi-currency ranking, and real-time security guardrail simulation buttons.
+
 ## Configuration
 
 Create a YAML file (see [`data/sample_config.yaml`](data/sample_config.yaml)):
