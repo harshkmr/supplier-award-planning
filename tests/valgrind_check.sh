@@ -19,18 +19,13 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 RUNNER="$SCRIPT_DIR/valgrind_runner.py"
 
-# CPython has some known false-positive leaks.  Use the suppression
-# file shipped with CPython if available.
-PYTHON_DIR="$(python3 -c 'import sys; print(sys.prefix)')"
-SUPPRESSIONS=""
-if [ -f "$PYTHON_DIR/Misc/valgrind-python.supp" ]; then
-    SUPPRESSIONS="--suppressions=$PYTHON_DIR/Misc/valgrind-python.supp"
-fi
+# Use our custom suppression file for known CPython false positives
+SUPPRESSIONS="--suppressions=$SCRIPT_DIR/valgrind-python.supp"
 
 echo "=== Valgrind memcheck for _container_util ==="
 echo "Project:      $PROJECT_DIR"
 echo "Runner:       $RUNNER"
-echo "Suppressions: ${SUPPRESSIONS:-none}"
+echo "Suppressions: $SUPPRESSIONS"
 echo ""
 
 valgrind \
@@ -38,6 +33,7 @@ valgrind \
     --show-leak-kinds=all \
     --track-origins=yes \
     --error-exitcode=1 \
+    --num-callers=20 \
     $SUPPRESSIONS \
     python3 "$RUNNER"
 
