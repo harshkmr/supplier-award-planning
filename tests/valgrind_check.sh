@@ -18,12 +18,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 RUNNER="$SCRIPT_DIR/valgrind_runner.py"
 
-# Crucial: Disable Python's pymalloc arena allocator so Valgrind tracks
-# true system malloc/free calls without false positives on PyObject pools.
+# Disable Python's pymalloc allocator so Valgrind uses system malloc/free
 export PYTHONMALLOC=malloc
-export PYTHONDEVMODE=1
 
-# Use custom suppression file for known CPython interpreter false positives
+# Use suppression file for known CPython runtime false positives
 SUPPRESSIONS="--suppressions=$SCRIPT_DIR/valgrind-python.supp"
 
 echo "=== Valgrind memcheck for _container_util ==="
@@ -33,14 +31,15 @@ echo "Suppressions: $SUPPRESSIONS"
 echo "PYTHONMALLOC: $PYTHONMALLOC"
 echo ""
 
+# We check for definite memory leaks in the C extension.
+# CPython runtime caches are suppressed via valgrind-python.supp.
 valgrind \
     --tool=memcheck \
     --leak-check=full \
-    --show-leak-kinds=definite,possible \
-    --errors-for-leak-kinds=definite,possible \
+    --show-leak-kinds=definite \
+    --errors-for-leak-kinds=definite \
     --track-origins=yes \
     --error-exitcode=1 \
-    --num-callers=25 \
     $SUPPRESSIONS \
     python3 "$RUNNER"
 

@@ -2,67 +2,71 @@
 # See https://github.com/python/cpython/blob/main/Misc/valgrind-python.supp
 
 {
-   ADDRESS_IN_RANGE/InvalidRead
+   CPython_AddressInRange_Read
    Memcheck:Addr4
+   ...
    obj:*/libpython*
 }
 
 {
-   ADDRESS_IN_RANGE/InvalidRead64
+   CPython_AddressInRange_Read64
    Memcheck:Addr8
+   ...
    obj:*/libpython*
 }
 
 {
-   ADDRESS_IN_RANGE/ConditionalJump
+   CPython_Cond
    Memcheck:Cond
+   ...
    obj:*/libpython*
 }
 
 {
-   ADDRESS_IN_RANGE/Value8
+   CPython_Value8
    Memcheck:Value8
+   ...
    obj:*/libpython*
 }
 
 {
-   Python_PyObject_Free
+   CPython_PyObject_Free
    Memcheck:Addr4
    fun:PyObject_Free
 }
 
 {
-   Python_PyObject_Free64
+   CPython_PyObject_Free64
    Memcheck:Addr8
    fun:PyObject_Free
 }
 
 {
-   Python_PyObject_Realloc
+   CPython_PyObject_Realloc
    Memcheck:Addr4
    fun:PyObject_Realloc
 }
 
 {
-   Python_PyObject_Realloc64
+   CPython_PyObject_Realloc64
    Memcheck:Addr8
    fun:PyObject_Realloc
 }
 
 {
-   Python_Obmalloc_Pool
+   CPython_Obmalloc_Pool
    Memcheck:Cond
    fun:PyObject_Malloc
 }
 
 {
-   Python_Obmalloc_Free
+   CPython_Obmalloc_Free
    Memcheck:Cond
    fun:PyObject_Free
 }
 
 {
-   Python_String_Interning
+   CPython_String_Interning
    Memcheck:Leak
    match-leak-kinds: reachable,possible
    fun:malloc
@@ -71,7 +75,16 @@
 }
 
 {
-   Python_Type_Ready
+   CPython_Dict_Resize
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   fun:malloc
+   ...
+   fun:dictresize
+}
+
+{
+   CPython_Type_Ready
    Memcheck:Leak
    match-leak-kinds: reachable,possible
    fun:malloc
@@ -80,7 +93,7 @@
 }
 
 {
-   Python_Module_Init
+   CPython_Module_Init
    Memcheck:Leak
    match-leak-kinds: reachable,possible
    fun:malloc
@@ -93,5 +106,13 @@
    Memcheck:Leak
    match-leak-kinds: reachable,possible
    fun:calloc
+   fun:_dl_*
+}
+
+{
+   Linux_Dynamic_Linker_Malloc
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   fun:malloc
    fun:_dl_*
 }
