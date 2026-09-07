@@ -96,15 +96,30 @@ def _fetch_live(base: str, quotes: list[str]) -> dict[str, float]:
         ) from exc
 
     data = resp.json()
-    # v2 response: {"date": "...", "base": "EUR", "rates": {"GBP": 0.856, ...}}
-    raw_rates = data.get("rates", {})
-    if not raw_rates:
-        raise FXFetchError(f"Empty rates in API response: {data}")
-
-    # Include base currency with rate 1.0
     rates: dict[str, float] = {base: 1.0}
-    for currency, rate in raw_rates.items():
-        rates[currency] = float(rate)
+
+    if isinstance(data, list):
+        if not data:
+            raise FXFetchError("Empty response from API")
+        for item in data:
+            if isinstance(item, dict):
+                if "quote" in item and "rate" in item:
+                    rates[str(item["quote"])] = float(item["rate"])
+                elif "rates" in item and isinstance(item["rates"], dict):
+                    for q, r in item["rates"].items():
+                        rates[str(q)] = float(r)
+    elif isinstance(data, dict):
+        if "rates" in data and isinstance(data["rates"], dict):
+            for q, r in data["rates"].items():
+                rates[str(q)] = float(r)
+        elif "quote" in data and "rate" in data:
+            rates[str(data["quote"])] = float(data["rate"])
+    else:
+        raise FXFetchError(f"Unexpected API response type: {type(data).__name__}")
+
+    if len(rates) <= 1 and quotes:
+        raise FXFetchError(f"No rates found in API response: {data}")
+
     return rates
 
 

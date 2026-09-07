@@ -190,9 +190,8 @@ class TestSafeYamlOnly:
     """Verify that only yaml.safe_load() is used."""
 
     def test_unsafe_yaml_rejected(self, bad_config_dir):
-        """YAML with Python tags is rejected by safe_load."""
-        # yaml.safe_load raises ConstructorError for !!python tags
-        with pytest.raises(yaml.YAMLError):
+        """YAML with Python tags is rejected by safe_load and wrapped in ConfigValidationError."""
+        with pytest.raises(ConfigValidationError, match="Invalid or unsafe YAML"):
             load_config(bad_config_dir / "unsafe_yaml.yaml")
 
     def test_no_yaml_load_in_source(self):

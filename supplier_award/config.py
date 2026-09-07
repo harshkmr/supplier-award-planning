@@ -63,8 +63,13 @@ def load_config(path: str | Path) -> dict[str, Any]:
     if not path.is_file():
         raise FileNotFoundError(f"Config file not found: {path}")
 
-    with open(path, "r", encoding="utf-8") as fh:
-        raw = yaml.safe_load(fh)
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh)
+    except yaml.YAMLError as exc:
+        raise ConfigValidationError(
+            f"Invalid or unsafe YAML in {path}: {exc}"
+        ) from exc
 
     if not isinstance(raw, dict):
         raise ConfigValidationError(
