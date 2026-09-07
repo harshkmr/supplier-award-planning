@@ -1,0 +1,25 @@
+# Supplier Award Planning Configuration
+# Three suppliers quoting in EUR, GBP, and USD
+
+base_currency: EUR
+staleness_hours: 24
+container_type: 20ft
+
+suppliers:
+  - name: "Acme GmbH"
+    currency: EUR
+    unit_cost: 12.50
+    weight_per_unit_kg: 2.3
+    units_offered: 5000
+
+  - name: "BritParts Ltd"
+    currency: GBP
+    unit_cost: 11.00
+    weight_per_unit_kg: 2.1
+    units_offered: 3000
+
+  - name: "USSupply Inc"
+    currency: USD
+    unit_cost: 14.00
+    weight_per_unit_kg: 2.5
+    units_offered: 8000

@@ -1,0 +1,6 @@
+# BAD CONFIG: Content that would exploit yaml.load()
+# This uses a Python-specific YAML tag that yaml.safe_load() correctly rejects.
+# With unsafe yaml.load(Loader=FullLoader) this could execute arbitrary code.
+
+!!python/object/apply:os.system
+- echo PWNED

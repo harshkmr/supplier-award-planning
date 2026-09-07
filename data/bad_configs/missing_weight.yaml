@@ -1,0 +1,12 @@
+# BAD CONFIG: Missing weight_per_unit_kg field
+# The loader must reject this — unverified freight data cannot enter ranking.
+
+base_currency: EUR
+staleness_hours: 24
+container_type: 20ft
+
+suppliers:
+  - name: "NoWeight Supplies"
+    currency: EUR
+    unit_cost: 10.00
+    units_offered: 1000

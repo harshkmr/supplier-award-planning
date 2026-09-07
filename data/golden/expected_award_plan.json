@@ -1,0 +1,45 @@
+{
+  "awards": [
+    {
+      "currency": "EUR",
+      "effective_cost": 12.5007,
+      "max_units_per_container": 12295,
+      "normalized_cost": 12.5,
+      "rank": 1,
+      "supplier": "Acme GmbH",
+      "unit_cost": 12.5,
+      "utilization": 0.9999,
+      "weight_per_unit_kg": 2.3
+    },
+    {
+      "currency": "GBP",
+      "effective_cost": 12.8511,
+      "max_units_per_container": 13466,
+      "normalized_cost": 12.8505,
+      "rank": 2,
+      "supplier": "BritParts Ltd",
+      "unit_cost": 11.0,
+      "utilization": 1.0,
+      "weight_per_unit_kg": 2.1
+    },
+    {
+      "currency": "USD",
+      "effective_cost": 12.9032,
+      "max_units_per_container": 11312,
+      "normalized_cost": 12.9032,
+      "rank": 3,
+      "supplier": "USSupply Inc",
+      "unit_cost": 14.0,
+      "utilization": 1.0,
+      "weight_per_unit_kg": 2.5
+    }
+  ],
+  "metadata": {
+    "base_currency": "EUR",
+    "container_type": "20ft",
+    "fx_rates": {
+      "GBP": 0.856,
+      "USD": 1.085
+    }
+  }
+}

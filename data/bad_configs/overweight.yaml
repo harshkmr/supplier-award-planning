@@ -1,0 +1,14 @@
+# BAD CONFIG: Single unit exceeds container payload capacity
+# A 20ft container has max payload of 28,280 kg.
+# This supplier's unit weighs 30,000 kg — impossible to load even one.
+
+base_currency: EUR
+staleness_hours: 24
+container_type: 20ft
+
+suppliers:
+  - name: "HeavySteel Corp"
+    currency: EUR
+    unit_cost: 500.00
+    weight_per_unit_kg: 30000.0
+    units_offered: 10
