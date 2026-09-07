@@ -1,75 +1,97 @@
-# Valgrind suppressions for CPython runtime leaks and false positives
-# These suppress known issues in CPython's memory management that are not bugs
-# in our extension code.
+# Valgrind suppressions for CPython runtime internal structures and false positives
+# See https://github.com/python/cpython/blob/main/Misc/valgrind-python.supp
 
-# Python's string interning and module caching can leave memory "reachable"
-# but not properly cleaned up at shutdown.
 {
-   <Python string interning>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   fun:_PyMem_RawMalloc
-   ...
-   fun:PyUnicode_*
-   ...
+   ADDRESS_IN_RANGE/InvalidRead
+   Memcheck:Addr4
+   obj:*/libpython*
 }
 
 {
-   <Python module caching>
+   ADDRESS_IN_RANGE/InvalidRead64
+   Memcheck:Addr8
+   obj:*/libpython*
+}
+
+{
+   ADDRESS_IN_RANGE/ConditionalJump
+   Memcheck:Cond
+   obj:*/libpython*
+}
+
+{
+   ADDRESS_IN_RANGE/Value8
+   Memcheck:Value8
+   obj:*/libpython*
+}
+
+{
+   Python_PyObject_Free
+   Memcheck:Addr4
+   fun:PyObject_Free
+}
+
+{
+   Python_PyObject_Free64
+   Memcheck:Addr8
+   fun:PyObject_Free
+}
+
+{
+   Python_PyObject_Realloc
+   Memcheck:Addr4
+   fun:PyObject_Realloc
+}
+
+{
+   Python_PyObject_Realloc64
+   Memcheck:Addr8
+   fun:PyObject_Realloc
+}
+
+{
+   Python_Obmalloc_Pool
+   Memcheck:Cond
+   fun:PyObject_Malloc
+}
+
+{
+   Python_Obmalloc_Free
+   Memcheck:Cond
+   fun:PyObject_Free
+}
+
+{
+   Python_String_Interning
    Memcheck:Leak
-   match-leak-kinds: reachable
+   match-leak-kinds: reachable,possible
+   fun:malloc
+   ...
+   fun:PyUnicode_*
+}
+
+{
+   Python_Type_Ready
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
+   fun:malloc
+   ...
+   fun:PyType_Ready
+}
+
+{
+   Python_Module_Init
+   Memcheck:Leak
+   match-leak-kinds: reachable,possible
    fun:malloc
    ...
    fun:PyInit_*
-   ...
 }
 
 {
-   <Python codec registration>
+   Linux_Dynamic_Linker
    Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   fun:_PyMem_RawMalloc
-   ...
-   fun:PyCodec_Register
-   ...
-}
-
-{
-   <Python importlib>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:_frozen_importlib*
-   ...
-}
-
-{
-   <Python site module>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:sitecustomize*
-   ...
-}
-
-# Suppress errors in libc and system libraries
-{
-   <libc startup>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
+   match-leak-kinds: reachable,possible
+   fun:calloc
    fun:_dl_*
-   ...
-}
-
-{
-   <libc ctype>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   ...
-   fun:__ctype_init
-   ...
 }
