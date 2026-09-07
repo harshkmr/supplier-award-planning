@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplier Award Planning — Interactive Demo</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 antialiased p-4 md:p-8 min-h-screen">
+  <div class="max-w-6xl mx-auto space-y-6">
+    
+    <!-- Top Header -->
+    <header class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 text-xs font-semibold uppercase tracking-wider rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Hardened System</span>
+          <span class="text-xs text-slate-400 font-mono">Python 3.12 + C Extension</span>
+        </div>
+        <h1 class="text-2xl font-bold mt-1 text-white">Supplier Award Planning & Valgrind Hardening</h1>
+        <p class="text-sm text-slate-400 mt-1">Multi-currency normalization (EUR/GBP/USD) • ISO 668 Container Limits • Safe YAML</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="loadSampleData()" class="px-3.5 py-2 text-xs font-medium rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition border border-slate-600">Reset Sample Data</button>
+        <button onclick="runLiveFXFetch()" class="px-3.5 py-2 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition flex items-center gap-1.5 shadow-lg shadow-blue-500/20">
+          <svg class="w-3.5 h-3.5 animate-spin hidden" id="fx-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+          <span id="fx-btn-text">Fetch Live FX</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Global Parameters & FX Status -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Container Selector -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-3">
+        <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          1. Container Standard
+        </h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-20ft" onclick="selectContainer('20ft')" class="p-3 rounded-lg border text-left transition bg-blue-600/20 border-blue-500 text-white">
+            <div class="font-bold text-sm">20ft TEU</div>
+            <div class="text-xs text-slate-300">Max Gross: 30,480 kg</div>
+            <div class="text-xs text-emerald-400 font-mono">Payload: 28,280 kg</div>
+          </button>
+          <button id="btn-40ft" onclick="selectContainer('40ft')" class="p-3 rounded-lg border text-left transition bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700">
+            <div class="font-bold text-sm">40ft FEU</div>
+            <div class="text-xs text-slate-300">Max Gross: 34,000 kg</div>
+            <div class="text-xs text-emerald-400 font-mono">Payload: 30,200 kg</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Base Currency & Live Rates -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-3">
+        <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          2. Base Currency & FX
+        </h2>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-slate-400">Base:</label>
+          <select id="base-currency" onchange="recalculate()" class="bg-slate-900 border border-slate-600 rounded px-2.5 py-1 text-sm font-bold text-slate-100">
+            <option value="EUR">EUR (€)</option>
+            <option value="USD">USD ($)</option>
+            <option value="GBP">GBP (£)</option>
+          </select>
+          <span id="fx-source-badge" class="ml-auto text-[10px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Frankfurter.app API</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-mono bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/60">
+          <div>1 EUR = <span id="rate-gbp" class="text-amber-300 font-bold">0.8592</span> GBP</div>
+          <div>1 EUR = <span id="rate-usd" class="text-emerald-300 font-bold">1.1619</span> USD</div>
+        </div>
+      </div>
+
+      <!-- Security Guardrail Status -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-3">
+        <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          3. Security Hardening
+        </h2>
+        <div class="space-y-1.5 text-xs">
+          <div class="flex items-center justify-between text-slate-300">
+            <span>YAML Safe Loader:</span>
+            <span class="text-emerald-400 font-medium font-mono">yaml.safe_load</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-300">
+            <span>C Extension Valgrind:</span>
+            <span class="text-emerald-400 font-medium font-mono">Zero Leaks / Errors</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-300">
+            <span>ISO Overweight Reject:</span>
+            <span class="text-emerald-400 font-medium font-mono">Active (Payload Cap)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Workspace: Suppliers Input & Results -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left Column: Supplier Quotes Input (7 cols) -->
+      <div class="lg:col-span-7 bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            Supplier Quotes & Freight Data
+          </h2>
+          <button onclick="addSupplierRow()" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600">+ Add Supplier</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-400 uppercase text-[10px] tracking-wider">
+                <th class="pb-2">Supplier</th>
+                <th class="pb-2">Currency</th>
+                <th class="pb-2">Unit Cost</th>
+                <th class="pb-2">Unit Wt (kg)</th>
+                <th class="pb-2">Units</th>
+                <th class="pb-2 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="suppliers-body" class="divide-y divide-slate-700/50 font-mono">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Security Guardrail Simulator Buttons -->
+        <div class="pt-3 border-t border-slate-700 space-y-2">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Simulate Insecure / Invalid Input:</div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="testInsecureScenario('overweight')" class="px-2.5 py-1 text-xs rounded bg-red-950/50 hover:bg-red-900/50 text-red-300 border border-red-700/50">Inject Overweight Item (30,000 kg)</button>
+            <button onclick="testInsecureScenario('missing_weight')" class="px-2.5 py-1 text-xs rounded bg-amber-950/50 hover:bg-amber-900/50 text-amber-300 border border-amber-700/50">Inject Zero Freight Weight</button>
+          </div>
+          <div id="security-alert" class="hidden p-3 rounded-lg border text-xs font-mono"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Award Ranking (5 cols) -->
+      <div class="lg:col-span-5 bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-4">
+        <h2 class="text-base font-bold text-white flex items-center justify-between">
+          <span>Ranked Awards</span>
+          <span class="text-xs font-normal text-slate-400 font-mono">Formula: Cost / Utilization</span>
+        </h2>
+
+        <div id="awards-list" class="space-y-3">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- JSON Output Preview -->
+        <div class="pt-3 border-t border-slate-700 space-y-2">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span class="font-semibold uppercase text-[10px] tracking-wider">Golden JSON Plan Preview</span>
+            <button onclick="copyJSON()" class="text-blue-400 hover:text-blue-300 text-[11px]">Copy JSON</button>
+          </div>
+          <pre id="json-preview" class="bg-slate-950 border border-slate-800 p-3 rounded-lg text-[10px] font-mono text-slate-300 overflow-x-auto max-h-48"></pre>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const SPECS = {
+      "20ft": { tare: 2200, max_gross: 30480, payload: 28280 },
+      "40ft": { tare: 3800, max_gross: 34000, payload: 30200 }
+    };
+
+    let currentContainer = "20ft";
+    let fxRates = { "EUR": 1.0, "GBP": 0.85918, "USD": 1.1619 };
+    
+    let suppliers = [
+      { name: "Acme GmbH", currency: "EUR", unit_cost: 12.50, weight_per_unit_kg: 2.3, units_offered: 5000 },
+      { name: "BritParts Ltd", currency: "GBP", unit_cost: 11.00, weight_per_unit_kg: 2.1, units_offered: 3000 },
+      { name: "USSupply Inc", currency: "USD", unit_cost: 14.00, weight_per_unit_kg: 2.5, units_offered: 8000 }
+    ];
+
+    function selectContainer(type) {
+      currentContainer = type;
+      document.getElementById('btn-20ft').className = type === '20ft' ? 'p-3 rounded-lg border text-left transition bg-blue-600/20 border-blue-500 text-white' : 'p-3 rounded-lg border text-left transition bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700';
+      document.getElementById('btn-40ft').className = type === '40ft' ? 'p-3 rounded-lg border text-left transition bg-blue-600/20 border-blue-500 text-white' : 'p-3 rounded-lg border text-left transition bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700';
+      recalculate();
+    }
+
+    function renderSuppliers() {
+      const tbody = document.getElementById('suppliers-body');
+      tbody.innerHTML = suppliers.map((s, idx) => `
+        <tr class="hover:bg-slate-750">
+          <td class="py-2.5 pr-2">
+            <input type="text" value="${s.name}" onchange="updateSupplier(${idx}, 'name', this.value)" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs w-full text-slate-100">
+          </td>
+          <td class="py-2.5 pr-2">
+            <select onchange="updateSupplier(${idx}, 'currency', this.value)" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100">
+              <option value="EUR" ${s.currency==='EUR'?'selected':''}>EUR</option>
+              <option value="GBP" ${s.currency==='GBP'?'selected':''}>GBP</option>
+              <option value="USD" ${s.currency==='USD'?'selected':''}>USD</option>
+            </select>
+          </td>
+          <td class="py-2.5 pr-2">
+            <input type="number" step="0.01" value="${s.unit_cost}" onchange="updateSupplier(${idx}, 'unit_cost', parseFloat(this.value))" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs w-20 text-slate-100">
+          </td>
+          <td class="py-2.5 pr-2">
+            <input type="number" step="0.1" value="${s.weight_per_unit_kg}" onchange="updateSupplier(${idx}, 'weight_per_unit_kg', parseFloat(this.value))" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs w-20 text-slate-100">
+          </td>
+          <td class="py-2.5 pr-2">
+            <input type="number" value="${s.units_offered}" onchange="updateSupplier(${idx}, 'units_offered', parseInt(this.value))" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs w-20 text-slate-100">
+          </td>
+          <td class="py-2.5 text-right">
+            <button onclick="removeSupplier(${idx})" class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5">✕</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function updateSupplier(idx, key, val) {
+      suppliers[idx][key] = val;
+      recalculate();
+    }
+
+    function addSupplierRow() {
+      suppliers.push({ name: "New Supplier", currency: "EUR", unit_cost: 10.0, weight_per_unit_kg: 2.0, units_offered: 1000 });
+      renderSuppliers();
+      recalculate();
+    }
+
+    function removeSupplier(idx) {
+      if (suppliers.length > 1) {
+        suppliers.splice(idx, 1);
+        renderSuppliers();
+        recalculate();
+      }
+    }
+
+    function loadSampleData() {
+      suppliers = [
+        { name: "Acme GmbH", currency: "EUR", unit_cost: 12.50, weight_per_unit_kg: 2.3, units_offered: 5000 },
+        { name: "BritParts Ltd", currency: "GBP", unit_cost: 11.00, weight_per_unit_kg: 2.1, units_offered: 3000 },
+        { name: "USSupply Inc", currency: "USD", unit_cost: 14.00, weight_per_unit_kg: 2.5, units_offered: 8000 }
+      ];
+      document.getElementById('security-alert').className = 'hidden';
+      renderSuppliers();
+      recalculate();
+    }
+
+    async function runLiveFXFetch() {
+      const spinner = document.getElementById('fx-spinner');
+      const btnText = document.getElementById('fx-btn-text');
+      spinner.classList.remove('hidden');
+      btnText.textContent = "Fetching...";
+      try {
+        const resp = await fetch('https://api.frankfurter.dev/v2/rates?base=EUR&quotes=GBP,USD');
+        const data = await resp.json();
+        if (Array.isArray(data)) {
+          data.forEach(item => {
+            if (item.quote && item.rate) fxRates[item.quote] = parseFloat(item.rate);
+          });
+        }
+        document.getElementById('rate-gbp').textContent = fxRates['GBP'].toFixed(4);
+        document.getElementById('rate-usd').textContent = fxRates['USD'].toFixed(4);
+        document.getElementById('fx-source-badge').textContent = 'Live Frankfurter.app';
+      } catch (err) {
+        console.error("Live fetch fallback to cache:", err);
+      } finally {
+        spinner.classList.add('hidden');
+        btnText.textContent = "Fetch Live FX";
+        recalculate();
+      }
+    }
+
+    function recalculate() {
+      const baseCur = document.getElementById('base-currency').value;
+      const spec = SPECS[currentContainer];
+      const payloadCap = spec.payload;
+      const alertBox = document.getElementById('security-alert');
+
+      let awards = [];
+      let hasError = false;
+
+      for (let i = 0; i < suppliers.length; i++) {
+        const s = suppliers[i];
+        if (s.weight_per_unit_kg <= 0 || isNaN(s.weight_per_unit_kg)) {
+          alertBox.className = 'p-3 rounded-lg border bg-amber-950/40 border-amber-700/60 text-amber-300 text-xs font-mono';
+          alertBox.innerHTML = `⚠️ <b>ConfigValidationError</b>: Supplier '${s.name}' has invalid freight weight (${s.weight_per_unit_kg} kg). Rejected by validation guardrail.`;
+          hasError = true;
+          break;
+        }
+
+        if (s.weight_per_unit_kg > payloadCap) {
+          alertBox.className = 'p-3 rounded-lg border bg-red-950/40 border-red-700/60 text-red-300 text-xs font-mono';
+          alertBox.innerHTML = `🛑 <b>OverweightError</b>: Single unit of '${s.name}' (${s.weight_per_unit_kg} kg) exceeds ${currentContainer} container payload (${payloadCap} kg). Allocation blocked.`;
+          hasError = true;
+          break;
+        }
+
+        // FX normalization to base currency
+        let normCost = s.unit_cost;
+        if (s.currency !== baseCur) {
+          // Normalization via EUR base
+          const rateFromBase = fxRates[s.currency] || 1.0;
+          normCost = s.unit_cost / rateFromBase;
+        }
+
+        // C extension scoring logic:
+        const maxUnits = Math.floor(payloadCap / s.weight_per_unit_kg);
+        const cargoWeight = maxUnits * s.weight_per_unit_kg;
+        const util = cargoWeight / payloadCap;
+        const effectiveCost = util > 0 ? normCost / util : Infinity;
+
+        awards.push({
+          supplier: s.name,
+          currency: s.currency,
+          unit_cost: s.unit_cost,
+          normalized_cost: parseFloat(normCost.toFixed(4)),
+          weight_per_unit_kg: s.weight_per_unit_kg,
+          max_units_per_container: maxUnits,
+          utilization: parseFloat(util.toFixed(4)),
+          effective_cost: parseFloat(effectiveCost.toFixed(4))
+        });
+      }
+
+      if (!hasError) {
+        alertBox.className = 'hidden';
+      }
+
+      awards.sort((a, b) => a.effective_cost - b.effective_cost);
+      awards.forEach((a, idx) => a.rank = idx + 1);
+
+      renderAwards(awards);
+    }
+
+    function renderAwards(awards) {
+      const container = document.getElementById('awards-list');
+      const baseCur = document.getElementById('base-currency').value;
+
+      if (awards.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs font-mono">No valid awards. Guardrail active.</div>`;
+        document.getElementById('json-preview').textContent = "{}";
+        return;
+      }
+
+      container.innerHTML = awards.map(a => `
+        <div class="p-4 rounded-xl border ${a.rank===1 ? 'bg-emerald-950/30 border-emerald-500/50 shadow-lg shadow-emerald-500/5' : 'bg-slate-900 border-slate-700'} space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${a.rank===1 ? 'bg-emerald-500 text-slate-900' : 'bg-slate-700 text-slate-200'}">#${a.rank}</span>
+              <span class="font-bold text-sm text-white">${a.supplier}</span>
+              ${a.rank===1 ? '<span class="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">Top Award</span>' : ''}
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-bold font-mono ${a.rank===1 ? 'text-emerald-400' : 'text-slate-200'}">${baseCur} ${a.effective_cost.toFixed(4)}</div>
+              <div class="text-[10px] text-slate-400">effective cost / unit</div>
+            </div>
+          </div>
+          
+          <!-- Utilization Progress Bar -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-[11px] font-mono text-slate-400">
+              <span>Container Load: ${(a.utilization * 100).toFixed(1)}% (${a.max_units_per_container.toLocaleString()} units)</span>
+              <span>Quote: ${a.unit_cost.toFixed(2)} ${a.currency}</span>
+            </div>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+              <div class="h-full rounded-full transition-all duration-300 ${a.utilization >= 0.99 ? 'bg-emerald-500' : 'bg-blue-500'}" style="width: ${Math.min(a.utilization*100, 100)}%"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Update JSON preview
+      const fullPlan = {
+        metadata: {
+          base_currency: baseCur,
+          container_type: currentContainer,
+          fx_rates: { "GBP": fxRates["GBP"], "USD": fxRates["USD"] }
+        },
+        awards: awards
+      };
+      document.getElementById('json-preview').textContent = JSON.stringify(fullPlan, null, 2);
+    }
+
+    function testInsecureScenario(type) {
+      if (type === 'overweight') {
+        suppliers.unshift({ name: "HeavySteel Corp", currency: "EUR", unit_cost: 500.0, weight_per_unit_kg: 30000.0, units_offered: 10 });
+      } else if (type === 'missing_weight') {
+        suppliers.unshift({ name: "Unverified Freight Ltd", currency: "EUR", unit_cost: 15.0, weight_per_unit_kg: 0.0, units_offered: 1000 });
+      }
+      renderSuppliers();
+      recalculate();
+    }
+
+    function copyJSON() {
+      const text = document.getElementById('json-preview').textContent;
+      navigator.clipboard.writeText(text);
+      alert("Golden JSON plan copied to clipboard!");
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSuppliers();
+      recalculate();
+    });
+  </script>
+</body>
+</html>
