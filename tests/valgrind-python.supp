@@ -1,31 +1,43 @@
 # Valgrind suppressions for CPython runtime internal structures and false positives
-# See https://github.com/python/cpython/blob/main/Misc/valgrind-python.supp
+# Valid Valgrind Memcheck suppression types: Cond, Value1..16, Addr1..32, Leak, Param, Free, Overlap
 
 {
-   glibc_wcscat_avx2
-   Memcheck:Addr32
+   glibc_wcscat_avx2_addr8
+   Memcheck:Addr8
    fun:__wcscat_avx2
 }
 
 {
-   glibc_wcscat_addr
-   Memcheck:Addr*
-   ...
-   fun:calculate_module_search_path
+   glibc_wcscat_avx2_cond
+   Memcheck:Cond
+   fun:__wcscat_avx2
 }
 
 {
-   glibc_wcscat_path
-   Memcheck:Addr*
+   glibc_wcscat_avx2_value8
+   Memcheck:Value8
+   fun:__wcscat_avx2
+}
+
+{
+   CPython_Path_Calculate_Addr8
+   Memcheck:Addr8
    ...
    fun:_PyPathConfig_Calculate
 }
 
 {
-   glibc_wcscat_exec
-   Memcheck:Addr*
+   CPython_Path_Calculate_Cond
+   Memcheck:Cond
    ...
-   fun:calculate_exec_prefix
+   fun:_PyPathConfig_Calculate
+}
+
+{
+   CPython_Path_Calculate_Value8
+   Memcheck:Value8
+   ...
+   fun:_PyPathConfig_Calculate
 }
 
 {
